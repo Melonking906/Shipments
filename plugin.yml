@@ -1,0 +1,29 @@
+main: me.nonit.shipments.Shipments
+name: Shipments
+authors: [Melonking, V10lator]
+version: ${project.version}
+depend: [Vault]
+commands:
+  shipments:
+    usage: /<command>
+    description: Shipment commands
+    aliases:
+    - sh
+    - ship
+    - shipment
+permissions:
+  shipments.admin:
+      description: All admin commands
+      default: op
+      children:
+        shipments.reload: true
+        shipments.set: true
+        shipments.unset: true
+  shipments.user:
+      description: All user commands
+      default: true
+      children:
+        shipments.list: true
+        shipments.ship: true
+        shipments.place: true
+        shipments.help: true
