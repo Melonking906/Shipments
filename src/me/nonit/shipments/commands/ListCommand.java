@@ -20,7 +20,7 @@ public class ListCommand extends SubCommand
         this.plugin = plugin;
     }
 
-    public boolean onCommand( CommandSender sender, Command cmd, String commandLabel, String[] args )
+    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args )
     {
         Iterator iter = this.plugin.getMaterialIndex().entrySet().iterator();
 

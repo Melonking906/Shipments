@@ -1,6 +1,5 @@
 package me.nonit.shipments;
 
-import java.io.IOException;
 import java.util.*;
 
 import net.milkbowl.vault.economy.Economy;
@@ -38,16 +37,6 @@ public class Shipments extends JavaPlugin
         loadConfigs();
 
         getCommand( "shipments" ).setExecutor( new CommandHandler( this ) );
-
-        try
-        {
-            MetricsLite metrics = new MetricsLite(this);
-            metrics.start();
-        }
-        catch (IOException e)
-        {
-            // Failed to submit the stats :-(
-        }
     }
 
     private boolean setupEconomy()
@@ -62,7 +51,7 @@ public class Shipments extends JavaPlugin
 
     public void loadConfigs()
     {
-        ((YamlConfigurationOptions ) fileConfiguration.options()).header("Shipments Config " + this.getDescription().getVersion() + " - loyloy.io" );
+        ((YamlConfigurationOptions ) fileConfiguration.options()).header("Shipments Config " + this.getDescription().getVersion() + " by Melonking" );
         ConfigurationSection configurationSection;
 
         if ( fileConfiguration.isConfigurationSection("blocks") )
@@ -142,8 +131,8 @@ public class Shipments extends JavaPlugin
     {
         String name = rawName.replace( '_', ' ' );
         name = WordUtils.capitalizeFully( name );
-        name = name.replaceAll( "Harvestcraft ", "" );
-        name = name.replaceAll( "Mocreatures ", "" );
+        //name = name.replaceAll( "Harvestcraft ", "" );
+        //name = name.replaceAll( "Mocreatures ", "" );
         name = name.replaceAll( "item", "" );
         return name;
     }

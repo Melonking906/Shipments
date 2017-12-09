@@ -8,7 +8,6 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.SignChangeEvent;
@@ -24,17 +23,40 @@ public class ShipmentListener implements Listener
         this.plugin = plugin;
     }
 
-    @EventHandler(priority=EventPriority.LOW, ignoreCancelled=true)
+    @EventHandler
     public void onSignChange( SignChangeEvent event )
     {
-        if ( (( event.getLine(1).equalsIgnoreCase("[shipment]") ) || ( event.getLine(1).equalsIgnoreCase("[shipments]") )) && (event.getPlayer().hasPermission("shipments.place") ) )
+        if( event.isCancelled() )
         {
+            return;
+        }
+
+        if( event.getPlayer() == null )
+        {
+            return;
+        }
+
+        if( !event.getPlayer().hasPermission("shipments.place") )
+        {
+            return;
+        }
+
+        String line0 = event.getLine(0);
+        line0 = line0.replaceAll("[^\\x00-\\x7F]", "");
+
+        String line1 = event.getLine(1);
+        line1 = line1.replaceAll("[^\\x00-\\x7F]", "");
+
+        if ( (line0.equalsIgnoreCase("[shipment]") || line0.equalsIgnoreCase("[shipments]"))
+                || (line1.equalsIgnoreCase("[shipment]") || line1.equalsIgnoreCase("[shipments]")) )
+        {
+            event.setLine( 0, "");
             event.setLine( 1, ChatColor.GREEN + "[Shipment]" );
             event.getPlayer().sendMessage( Shipments.getPrefix() + "Shipment sign created :D" );
         }
     }
 
-    @EventHandler( priority = EventPriority.HIGH, ignoreCancelled = true )
+    @EventHandler
     public void onPlayerInteract( PlayerInteractEvent event )
     {
         if( event.getAction() != Action.RIGHT_CLICK_BLOCK )

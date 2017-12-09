@@ -1,7 +1,7 @@
 main: me.nonit.shipments.Shipments
 name: Shipments
 authors: [Melonking, V10lator]
-version: ${project.version}
+version: 3.0
 depend: [Vault]
 commands:
   shipments:
