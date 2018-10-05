@@ -4,16 +4,23 @@ import org.bukkit.Material;
 
 public class ShipmentItem
 {
-  private final Material mat;
+  private final Material material;
   private final Short data;
+  private double value;
 
-  public ShipmentItem( Material mat, Short data )
+  ShipmentItem( Material material, Short data, double value )
   {
-    this.mat = mat;
+    this.material = material;
     this.data = data;
+    this.value = value;
   }
 
-  public Material getMat() { return mat; }
+  public Material getType() { return material; }
 
   public Short getData() { return data; }
+
+  public double getValue()
+  {
+    return value;
+  }
 }

@@ -81,7 +81,7 @@ public class ListCommand extends SubCommand
             }
             else
             {
-                sb.append( plugin.getEconomy().format( price * vi.getMat().getMaxStackSize() ).replace( ".00 ", " " ) );
+                sb.append( plugin.getEconomy().format( price * vi.getType().getMaxStackSize() ).replace( ".00 ", " " ) );
             }
 
             sender.sendMessage( sb.toString() );

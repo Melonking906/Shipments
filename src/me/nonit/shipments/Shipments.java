@@ -4,9 +4,10 @@ import java.util.*;
 
 import net.milkbowl.vault.economy.Economy;
 
-import org.apache.commons.lang.WordUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfigurationOptions;
@@ -18,15 +19,20 @@ public class Shipments extends JavaPlugin
     private static final String PREFIX = ChatColor.YELLOW + "[Shipments]" + ChatColor.GREEN + " ";
 
     private Economy economy;
-    private HashMap<String, Double> materialIndex = new HashMap<String, Double>();
-    private HashMap<String, ShipmentChest> agreement = new HashMap<String, ShipmentChest>();
     private Configuration fileConfiguration;
+
+    private final ShipmentManager shipmentManager;
+
+    public Shipments()
+    {
+        this.shipmentManager = new ShipmentManager( this );
+    }
 
     public void onEnable()
     {
         if( ! setupEconomy() )
         {
-            log( "Vault Error :(" );
+            getLogger().info( "Vault Error :(" );
             getServer().getPluginManager().disablePlugin( this );
             return;
         }
@@ -39,34 +45,27 @@ public class Shipments extends JavaPlugin
         getCommand( "shipments" ).setExecutor( new CommandHandler( this ) );
     }
 
-    private boolean setupEconomy()
-    {
-        RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
-
-        return (economy != null);
-    }
-
     public void loadConfigs()
     {
+        //Header
         ((YamlConfigurationOptions ) fileConfiguration.options()).header("Shipments Config " + this.getDescription().getVersion() + " by Melonking" );
-        ConfigurationSection configurationSection;
+
+        //Shippable items
+        ConfigurationSection blockSection;
 
         if ( fileConfiguration.isConfigurationSection("blocks") )
         {
-            configurationSection = fileConfiguration.getConfigurationSection("blocks");
+            blockSection = fileConfiguration.getConfigurationSection("blocks");
         }
         else
         {
-            configurationSection = fileConfiguration.createSection("blocks");
+            blockSection = fileConfiguration.createSection("blocks");
         }
 
-        Iterator iterator = configurationSection.getValues(false).keySet().iterator();
-        while (iterator.hasNext())
+        Iterator blockIter = blockSection.getValues(false).keySet().iterator();
+        while( blockIter.hasNext() )
         {
-            String name = (String)iterator.next();
+            String name = (String)blockIter.next();
 
             if( fileConfiguration.getConfigurationSection( "blocks." + name ) != null && getConfig().getConfigurationSection( "blocks." + name ).getKeys( false ).isEmpty() )
             {
@@ -78,7 +77,7 @@ public class Shipments extends JavaPlugin
             if ( stringToShipmentItem( name ) == null)
             {
                 log("Ignoring invalid block from config: " + name);
-                iterator.remove();
+                blockIter.remove();
             }
             else
             {
@@ -97,44 +96,48 @@ public class Shipments extends JavaPlugin
             }
         }
 
+        //Chests
+        ConfigurationSection chestSection;
+
+        if ( fileConfiguration.isConfigurationSection("chests") )
+        {
+            chestSection = fileConfiguration.getConfigurationSection("chests");
+        }
+        else
+        {
+            chestSection = fileConfiguration.createSection("chests");
+        }
+
+        List chestDatas = chestSection.getList( "chest-locations" );
+        for( Object chestData : chestDatas )
+        {
+            String chestDataString = (String) chestData;
+            String[] chestDataArray = chestDataString.split( "#" ); //world, x, y, z, owner uuid
+
+            String worldString = chestDataArray[0];
+            int x = Integer.parseInt( chestDataArray[1] );
+            int y = Integer.parseInt( chestDataArray[2] );
+            int z = Integer.parseInt( chestDataArray[3] );
+            String ownerUUID = chestDataArray[4];
+
+            World world = getServer().getWorld( worldString );
+            if( world == null )
+            {
+                continue;
+            }
+
+            Block chestBlock = world.getBlockAt( x, y, z );
+            if( !chestBlock.getType().equals( Material.CHEST ) )
+            {
+                //Add mech to remove ded chests
+                continue;
+            }
+
+            shipmentManager.addShipmentChest( new ShipmentChest( world, x, y, z ) );
+        }
+
+        //Save
         saveConfig();
-    }
-
-    public ShipmentItem stringToShipmentItem( String name )
-    {
-        short data = 0;
-
-        if( name.contains( ":" ) )
-        {
-            String[] split = name.split( ":" );
-            name = split[0];
-            try
-            {
-                data = Short.parseShort( split[1] );
-            }
-            catch( NumberFormatException e )
-            {
-                return null;
-            }
-        }
-
-        Material mat = Material.matchMaterial( name );
-        if( mat == null )
-        {
-            return null;
-        }
-
-        return new ShipmentItem( mat, data );
-    }
-
-    public static String prettyName( String rawName )
-    {
-        String name = rawName.replace( '_', ' ' );
-        name = WordUtils.capitalizeFully( name );
-        //name = name.replaceAll( "Harvestcraft ", "" );
-        //name = name.replaceAll( "Mocreatures ", "" );
-        name = name.replaceAll( "item", "" );
-        return name;
     }
 
     public void reloadShipments()
@@ -145,19 +148,22 @@ public class Shipments extends JavaPlugin
         loadConfigs();
     }
 
-    public void log( String message )
-    {
-        getLogger().info( message );
-    }
-
     public static String getPrefix()
     {
         return PREFIX;
     }
 
+    private boolean setupEconomy()
+    {
+        RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+        if (economyProvider != null) {
+            economy = economyProvider.getProvider();
+        }
+
+        return (economy != null);
+    }
+
     public Economy getEconomy() { return economy; }
 
-    public HashMap<String, Double> getMaterialIndex() { return materialIndex; }
-
-    public HashMap<String, ShipmentChest> getAgreement() { return agreement; }
+    public ShipmentManager getShipmentManager() { return shipmentManager; }
 }
